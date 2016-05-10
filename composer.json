@@ -1,0 +1,19 @@
+{
+    "name": "silverstripe/superglue",
+    "type": "silverstripe-module",
+    "require": {
+        "silverstripe/framework": "^3.2",
+        "silverstripe/cms": "^3.2",
+        "silverstripe-australia/gridfieldextensions": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SilverStripe\\SuperGlue\\": "code"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SilverStripe\\SuperGlue\\Test\\": "tests"
+        }
+    }
+}
