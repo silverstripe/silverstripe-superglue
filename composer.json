@@ -1,19 +1,26 @@
 {
     "name": "silverstripe/superglue",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "require": {
-        "silverstripe/framework": "^3.2",
-        "silverstripe/cms": "^3.2",
-        "silverstripe-australia/gridfieldextensions": "^1.0"
+        "silverstripe/cms": "^4.0",
+        "silverstripe/framework": "^4.0",
+        "silverstripe-australia/gridfieldextensions": "^3.0"
     },
     "autoload": {
         "psr-4": {
-            "SilverStripe\\SuperGlue\\": "code"
+            "SilverStripe\\SuperGlue\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "SilverStripe\\SuperGlue\\Test\\": "tests"
         }
-    }
+    },
+    "extra": {
+        "expose": [
+            "javascript"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
