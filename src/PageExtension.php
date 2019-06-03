@@ -199,7 +199,7 @@ class PageExtension extends DataExtension
             $pinnedGrid = new GridField(
                 "PinnedConnectedPagesGridField",
                 "Pinned Pages",
-                $this->owner->SuperGlueSubPages()->filter("SuperGluePinned", true)->sort("SuperGlueSort", "DESC")
+                $this->getSuperGluePinnedPages()
             );
 
             $pinnedGrid->getConfig()->addComponents(
@@ -213,7 +213,7 @@ class PageExtension extends DataExtension
                 $displayFields = $connector->getGridFieldDisplayFields($this->owner);
 
                 /** @var GridFieldDataColumns $dataColumns */
-                $dataColumns = $pinnedGrid->getConfig()->getComponentByType("GridFieldDataColumns");
+                $dataColumns = $pinnedGrid->getConfig()->getComponentByType(GridFieldDataColumns::class);
 
                 $dataColumns->setDisplayFields($displayFields);
             }
@@ -223,7 +223,7 @@ class PageExtension extends DataExtension
             $normalGrid = new GridField(
                 "NormalConnectedPagesGridField",
                 "Normal Pages",
-                $this->owner->SuperGlueSubPages()->filter("SuperGluePinned", false)->sort("SuperGlueSort", "DESC")
+                $this->getSuperGlueUnpinnedPages()
             );
 
             $normalGrid->addExtraClass('super-glue-normal');
@@ -237,7 +237,7 @@ class PageExtension extends DataExtension
                 $displayFields = $connector->getGridFieldDisplayFields($this->owner);
 
                 /** @var GridFieldDataColumns $dataColumns */
-                $dataColumns = $normalGrid->getConfig()->getComponentByType("GridFieldDataColumns");
+                $dataColumns = $normalGrid->getConfig()->getComponentByType(GridFieldDataColumns::class);
 
                 $dataColumns->setDisplayFields($displayFields);
             }
@@ -246,6 +246,28 @@ class PageExtension extends DataExtension
 
             $fields->addFieldToTab("Root", $tab);
         }
+    }
+
+    public function getSuperGluePinnedPages()
+    {
+        if (method_exists($this->owner, 'getSuperGluePinnedPages')) {
+            return $this->owner->getSuperGluePinnedPages();
+        }
+
+        return $this->owner->SuperGlueSubPages()
+            ->filter("SuperGluePinned", true)
+            ->sort("SuperGlueSort", "DESC");
+    }
+
+    public function getSuperGlueUnpinnedPages()
+    {
+        if (method_exists($this->owner, 'getSuperGlueUnpinnedPages')) {
+            return $this->owner->getSuperGlueUnpinnedPages();
+        }
+
+        return $this->owner->SuperGlueSubPages()
+            ->filter("SuperGluePinned", false)
+            ->sort("SuperGlueSort", "DESC");
     }
 
     /**

@@ -107,6 +107,8 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
                 ["ID" => $record->ID]
             );
 
+            $field->addExtraClass('btn btn-primary');
+
             return $field->Field();
         }
 

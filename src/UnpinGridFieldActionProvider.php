@@ -86,6 +86,8 @@ class UnpinGridFieldActionProvider implements GridField_ColumnProvider, GridFiel
             ["ID" => $record->ID]
         );
 
+        $field->addExtraClass('btn btn-warning');
+
         return $field->Field();
     }
 
