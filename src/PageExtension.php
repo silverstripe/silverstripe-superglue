@@ -2,59 +2,60 @@
 
 namespace SilverStripe\SuperGlue;
 
-use ArrayData;
-use ClassInfo;
-use Controller;
-use DataExtension;
-use DropdownField;
-use FieldList;
-use GridField;
-use GridFieldDataColumns;
-use HTMLText;
-use ManyManyList;
-use PaginatedList;
-use Requirements;
-use SiteTree;
-use Tab;
-use TextField;
+use SilverStripe\View\ArrayData;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\ORM\DataExtension;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
+use SilverStripe\ORM\ManyManyList;
+use SilverStripe\ORM\PaginatedList;
+use SilverStripe\View\Requirements;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\FieldType\DBHTMLText;
+use SilverStripe\Control\Controller;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 class PageExtension extends DataExtension
 {
     /**
      * @var array
      */
-    private static $db = array(
-        "SuperGlueConnector" => "Varchar(255)",
-        "SuperGluePinLimit" => "Int",
+    private static $db = [
+        "SuperGlueConnector"      => "Varchar(255)",
+        "SuperGluePinLimit"       => "Int",
         "SuperGlueFirstPageLimit" => "Int",
-        "SuperGluePageLimit" => "Int",
-    );
+        "SuperGluePageLimit"      => "Int",
+    ];
 
     /**
      * @var array
      */
-    private static $defaults = array(
-        "SuperGluePinLimit" => 5,
+    private static $defaults = [
+        "SuperGluePinLimit"       => 5,
         "SuperGlueFirstPageLimit" => 9,
-        "SuperGluePageLimit" => 9,
-    );
+        "SuperGluePageLimit"      => 9,
+    ];
 
     /**
      * @var array
      */
-    private static $many_many = array(
-        "SuperGlueSubPages" => "SiteTree",
-    );
+    private static $many_many = [
+        "SuperGlueSubPages" => SiteTree::class,
+    ];
 
     /**
      * @var array
      */
-    private static $many_many_extraFields = array(
-        "SuperGlueSubPages" => array(
-            "SuperGlueSort" => "Int",
+    private static $many_many_extraFields = [
+        "SuperGlueSubPages" => [
+            "SuperGlueSort"   => "Int",
             "SuperGluePinned" => "Boolean",
-        ),
-    );
+        ],
+    ];
 
     /**
      * @inheritdoc
@@ -63,8 +64,8 @@ class PageExtension extends DataExtension
      */
     public function updateSettingsFields(FieldList $fields)
     {
-        $connectors = array("" => "(none)");
-        $implementors = ClassInfo::implementorsOf("SilverStripe\\SuperGlue\\Connector");
+        $connectors = ["" => "(none)"];
+        $implementors = ClassInfo::implementorsOf(Connector::class);
 
         foreach ($implementors as $implementor) {
             /** @var Connector $instance */
@@ -168,7 +169,7 @@ class PageExtension extends DataExtension
                                     'selected': index
                                 });
                             } else {
-                                modified.push(item);
+                                modified.push(items[i]);
                             }
                         }
                     } else {
@@ -185,6 +186,8 @@ class PageExtension extends DataExtension
             }, 50);
         ");
 
+        Requirements::javascript('silverstripe/superglue:javascript/superglue.js');
+
         $this->setRelations();
 
         if ($connector = $this->owner->SuperGlueConnector) {
@@ -196,7 +199,7 @@ class PageExtension extends DataExtension
             $pinnedGrid = new GridField(
                 "PinnedConnectedPagesGridField",
                 "Pinned Pages",
-                $this->owner->SuperGlueSubPages()->filter("SuperGluePinned", true)->sort("SuperGlueSort", "DESC")
+                $this->getSuperGluePinnedPages()
             );
 
             $pinnedGrid->getConfig()->addComponents(
@@ -204,11 +207,13 @@ class PageExtension extends DataExtension
                 new UnpinGridFieldActionProvider()
             );
 
+            $pinnedGrid->addExtraClass('super-glue-pinned');
+
             if (method_exists($connector, "getGridFieldDisplayFields")) {
                 $displayFields = $connector->getGridFieldDisplayFields($this->owner);
 
                 /** @var GridFieldDataColumns $dataColumns */
-                $dataColumns = $pinnedGrid->getConfig()->getComponentByType("GridFieldDataColumns");
+                $dataColumns = $pinnedGrid->getConfig()->getComponentByType(GridFieldDataColumns::class);
 
                 $dataColumns->setDisplayFields($displayFields);
             }
@@ -218,8 +223,10 @@ class PageExtension extends DataExtension
             $normalGrid = new GridField(
                 "NormalConnectedPagesGridField",
                 "Normal Pages",
-                $this->owner->SuperGlueSubPages()->filter("SuperGluePinned", false)->sort("SuperGlueSort", "DESC")
+                $this->getSuperGlueUnpinnedPages()
             );
+
+            $normalGrid->addExtraClass('super-glue-normal');
 
             $normalGrid->getConfig()->addComponents(
                 (new GridFieldOrderableRows())->setSortField("SuperGlueSort"),
@@ -230,7 +237,7 @@ class PageExtension extends DataExtension
                 $displayFields = $connector->getGridFieldDisplayFields($this->owner);
 
                 /** @var GridFieldDataColumns $dataColumns */
-                $dataColumns = $normalGrid->getConfig()->getComponentByType("GridFieldDataColumns");
+                $dataColumns = $normalGrid->getConfig()->getComponentByType(GridFieldDataColumns::class);
 
                 $dataColumns->setDisplayFields($displayFields);
             }
@@ -239,6 +246,28 @@ class PageExtension extends DataExtension
 
             $fields->addFieldToTab("Root", $tab);
         }
+    }
+
+    public function getSuperGluePinnedPages()
+    {
+        if (method_exists($this->owner, 'getSuperGluePinnedPages')) {
+            return $this->owner->getSuperGluePinnedPages();
+        }
+
+        return $this->owner->SuperGlueSubPages()
+            ->filter("SuperGluePinned", true)
+            ->sort("SuperGlueSort", "DESC");
+    }
+
+    public function getSuperGlueUnpinnedPages()
+    {
+        if (method_exists($this->owner, 'getSuperGlueUnpinnedPages')) {
+            return $this->owner->getSuperGlueUnpinnedPages();
+        }
+
+        return $this->owner->SuperGlueSubPages()
+            ->filter("SuperGluePinned", false)
+            ->sort("SuperGlueSort", "DESC");
     }
 
     /**
@@ -267,7 +296,7 @@ class PageExtension extends DataExtension
                     continue;
                 }
 
-                $relatedList->add($potentialList->byID($potentialId), array("SuperGlueSort" => $relatedList->min("SuperGlueSort") - 1));
+                $relatedList->add($potentialList->byID($potentialId), ["SuperGlueSort" => $relatedList->min("SuperGlueSort") - 1]);
             }
 
             // remove linked, non-potential objects
@@ -296,17 +325,17 @@ class PageExtension extends DataExtension
     public function SuperGlueViewSubPages()
     {
         $list = $this->owner->SuperGlueSubPages()
-            ->Sort(array(
+            ->Sort([
                 "SuperGluePinned" => "DESC",
-                "SuperGlueSort" => "ASC",
-            ));
+                "SuperGlueSort"   => "ASC",
+            ]);
 
         $controller = Controller::curr();
 
         $paginated = new PaginatedList($list, $controller->getRequest());
         $paginated->setLimitItems(true);
 
-        if ((int) $paginated->getRequest()->getVar("start") < $this->owner->SuperGlueFirstPageLimit) {
+        if ((int)$paginated->getRequest()->getVar("start") < $this->owner->SuperGlueFirstPageLimit) {
             $paginated->setPageLength($this->owner->SuperGlueFirstPageLimit);
         } else {
             $paginated->setPageLength($this->owner->SuperGluePageLimit);
@@ -316,7 +345,7 @@ class PageExtension extends DataExtension
     }
 
     /**
-     * @return HTMLText
+     * @return DBHTMLText
      */
     public function SuperGlueView()
     {
@@ -328,9 +357,9 @@ class PageExtension extends DataExtension
         /** @var SiteTree $owner */
         $owner = $this->owner;
 
-        $data = new ArrayData(array(
-            "Parent" => $this->owner
-        ));
+        $data = new ArrayData([
+            "Parent" => $this->owner,
+        ]);
 
         return $data->renderWith($connector->getTemplate($owner));
     }

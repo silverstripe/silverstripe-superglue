@@ -2,38 +2,17 @@
 
 namespace SilverStripe\SuperGlue;
 
-use Controller;
-use DataObject;
-use Exception;
-use GridField;
-use GridField_ActionProvider;
-use GridField_ColumnProvider;
-use GridField_FormAction;
-use SiteTree;
-use SS_HTTPResponse;
+use SilverStripe\Control\Controller;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridField_ActionProvider;
+use SilverStripe\Forms\GridField\GridField_ColumnProvider;
+use SilverStripe\Forms\GridField\GridField_FormAction;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\HTTPResponse;
 
-class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_ActionProvider
+class UnpinGridFieldActionProvider implements GridField_ColumnProvider, GridField_ActionProvider
 {
-    /**
-     * @var int
-     */
-    private $limit = 5;
-
-    /**
-     * @var int
-     */
-    private $pinned = 0;
-
-    /**
-     * @param int $limit
-     * @param int $pinned
-     */
-    public function __construct($limit, $pinned)
-    {
-        $this->limit = $limit;
-        $this->pinned = $pinned;
-    }
-
     /**
      * @inheritdoc
      *
@@ -58,7 +37,7 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
      */
     public function getColumnAttributes($gridField, $record, $columnName)
     {
-        return array("class" => "col-buttons");
+        return ["class" => "col-buttons"];
     }
 
     /**
@@ -72,7 +51,7 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
     public function getColumnMetadata($gridField, $columnName)
     {
         if ($columnName == "Actions") {
-            return array("title" => "");
+            return ["title" => ""];
         }
     }
 
@@ -85,7 +64,7 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
      */
     public function getColumnsHandled($gridField)
     {
-        return array("Actions");
+        return ["Actions"];
     }
 
     /**
@@ -99,19 +78,17 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
      */
     public function getColumnContent($gridField, $record, $columnName)
     {
-        if ($this->pinned < $this->limit) {
-            $field = GridField_FormAction::create(
-                $gridField,
-                "CustomAction" . $record->ID,
-                "pin",
-                "pin",
-                array("ID" => $record->ID)
-            );
+        $field = GridField_FormAction::create(
+            $gridField,
+            "CustomAction" . $record->ID,
+            "unpin",
+            "unpin",
+            ["ID" => $record->ID]
+        );
 
-            return $field->Field();
-        }
+        $field->addExtraClass('btn btn-warning');
 
-        return "";
+        return $field->Field();
     }
 
     /**
@@ -123,7 +100,7 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
      */
     public function getActions($gridField)
     {
-        return array("pin");
+        return ["unpin"];
     }
 
     /**
@@ -134,11 +111,11 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
      * @param array $arguments
      * @param array $data
      *
-     * @return SS_HTTPResponse
+     * @return HTTPResponse
      */
     public function handleAction(GridField $gridField, $actionName, $arguments, $data)
     {
-        if ($actionName == "pin") {
+        if ($actionName == "unpin") {
             $pageId = $data["ID"];
             $subPageId = $arguments["ID"];
 
@@ -148,11 +125,9 @@ class PinGridFieldActionProvider implements GridField_ColumnProvider, GridField_
 
                 if ($page && $subPage) {
                     $components = $page->getManyManyComponents("SuperGlueSubPages");
-                    $components->add($subPage, array("SuperGluePinned" => 1));
+                    $components->add($subPage, ["SuperGluePinned" => 0]);
                 }
             }
         }
-
-        return Controller::curr()->redirectBack();
     }
 }

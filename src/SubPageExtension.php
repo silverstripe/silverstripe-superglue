@@ -2,26 +2,27 @@
 
 namespace SilverStripe\SuperGlue;
 
-use ClassInfo;
-use DataExtension;
-use ManyManyList;
-use Object;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\ORM\DataExtension;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ManyManyList;
+use SilverStripe\CMS\Model\SiteTree;
 
 class SubPageExtension extends DataExtension
 {
     /**
      * @var array
      */
-    private static $belongs_many_many = array(
-        "SuperGluePages" => "SiteTree",
-    );
+    private static $belongs_many_many = [
+        "SuperGluePages" => SiteTree::class,
+    ];
 
     /**
      * @inheritdoc
      */
     public function onAfterWrite()
     {
-        $decorated = $this->getDecoratedBy("SilverStripe\\SuperGlue\\PageExtension");
+        $decorated = $this->getDecoratedBy(PageExtension::class);
 
         foreach ($decorated as $class) {
             $objects = call_user_func([$class, "get"]);
@@ -37,7 +38,7 @@ class SubPageExtension extends DataExtension
                     if (in_array($this->owner->ID, $listIds)) {
                         /** @var ManyManyList $relationList */
                         $relationList = $object->SuperGlueSubPages();
-                        $relationList->add($this->owner, array("SuperGlueSort" => $relationList->min("SuperGlueSort") - 1));
+                        $relationList->add($this->owner, ["SuperGlueSort" => $relationList->min("SuperGlueSort") - 1]);
                     }
                 }
             }
@@ -51,10 +52,10 @@ class SubPageExtension extends DataExtension
      */
     private function getDecoratedBy($extension)
     {
-        $classes = array();
+        $classes = [];
 
         foreach (ClassInfo::subClassesFor("Object") as $className) {
-            if (Object::has_extension($className, $extension)) {
+            if (DataObject::has_extension($className, $extension)) {
                 $classes[] = $className;
             }
         }

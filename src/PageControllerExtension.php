@@ -2,20 +2,20 @@
 
 namespace SilverStripe\SuperGlue;
 
-use Controller;
-use DataObject;
-use Extension;
-use PaginatedList;
-use SS_HTTPResponse;
+use SilverStripe\Core\Extension;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\HTTPResponse;
 
 class PageControllerExtension extends Extension
 {
     /**
      * @var array
      */
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         "LoadMore",
-    );
+    ];
 
     /**
      * @return SS_HTTPResponse
@@ -30,7 +30,7 @@ class PageControllerExtension extends Extension
         /** @var Connector $connector */
         $connector = new $connector();
 
-        $items = array();
+        $items = [];
 
         foreach ($pages as $page) {
             if (method_exists($connector, "getPageArray")) {
@@ -42,19 +42,19 @@ class PageControllerExtension extends Extension
             $items[] = $item;
         }
 
-        $data = array(
-            "total" => (int) $pages->TotalItems(),
-            "limit" => (int) $pages->getPageLength(),
-            "start" => (int) $pages->getPageStart(),
-            "next" => $pages->NextLink(),
+        $data = [
+            "total" => (int)$pages->TotalItems(),
+            "limit" => (int)$pages->getPageLength(),
+            "start" => (int)$pages->getPageStart(),
+            "next"  => $pages->NextLink(),
             "items" => $items,
-        );
+        ];
 
-        if ((int) $pages->getPageStart() >= (int) $pages->TotalItems() - (int) $pages->getPageLength()) {
+        if ((int)$pages->getPageStart() >= (int)$pages->TotalItems() - (int)$pages->getPageLength()) {
             unset($data["next"]);
         }
 
-        $response = new SS_HTTPResponse();
+        $response = new HTTPResponse();
         $response->setBody(json_encode($data));
         $response->addHeader("Content-type", "application/json");
 
