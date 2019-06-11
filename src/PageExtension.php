@@ -286,27 +286,30 @@ class PageExtension extends DataExtension
             $relatedList = $owner->SuperGlueSubPages();
 
             $potentialList = $connector->getDataList($owner);
-            $potentialIds = $potentialList->column("ID");
-            $relatedIds = $relatedList->column("ID");
 
-            // add unlinked, potential objects
+            if ($potentialList) {
+                $potentialIds = $potentialList->column("ID");
+                $relatedIds = $relatedList->column("ID");
 
-            foreach ($potentialIds as $potentialId) {
-                if (in_array($potentialId, $relatedIds)) {
-                    continue;
+                // add unlinked, potential objects
+
+                foreach ($potentialIds as $potentialId) {
+                    if (in_array($potentialId, $relatedIds)) {
+                        continue;
+                    }
+
+                    $relatedList->add($potentialList->byID($potentialId), ["SuperGlueSort" => $relatedList->min("SuperGlueSort") - 1]);
                 }
 
-                $relatedList->add($potentialList->byID($potentialId), ["SuperGlueSort" => $relatedList->min("SuperGlueSort") - 1]);
-            }
+                // remove linked, non-potential objects
 
-            // remove linked, non-potential objects
+                foreach ($relatedIds as $relatedId) {
+                    if (in_array($relatedId, $potentialIds)) {
+                        continue;
+                    }
 
-            foreach ($relatedIds as $relatedId) {
-                if (in_array($relatedId, $potentialIds)) {
-                    continue;
+                    $relatedList->remove($relatedList->byID($relatedId));
                 }
-
-                $relatedList->remove($relatedList->byID($relatedId));
             }
         }
     }
