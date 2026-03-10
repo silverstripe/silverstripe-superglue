@@ -2,24 +2,24 @@
 
 namespace SilverStripe\SuperGlue;
 
-use SilverStripe\View\ArrayData;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Controller;
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
-use SilverStripe\ORM\ManyManyList;
-use SilverStripe\ORM\PaginatedList;
-use SilverStripe\View\Requirements;
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TextField;
+use SilverStripe\Model\ArrayData;
+use SilverStripe\Model\List\ManyManyList;
+use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\Control\Controller;
+use SilverStripe\View\Requirements;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
-class PageExtension extends DataExtension
+class PageExtension extends Extension
 {
     /**
      * @var array
@@ -56,6 +56,35 @@ class PageExtension extends DataExtension
             "SuperGluePinned" => "Boolean",
         ],
     ];
+
+    /**
+     * Returns the pin limit, falling back to the default if the DB value is 0 or null.
+     * This handles existing pages that were created before the extension was applied,
+     * which never had populateDefaults() called and so have 0 in the DB rather than
+     * the declared default of 5.
+     */
+    public function getSuperGluePinLimit(): int
+    {
+        return (int)$this->owner->getField('SuperGluePinLimit') ?: 5;
+    }
+
+    /**
+     * Returns the first-page item limit, falling back to the default if the DB value
+     * is 0 or null. See getSuperGluePinLimit() for context on why this is needed.
+     */
+    public function getSuperGlueFirstPageLimit(): int
+    {
+        return (int)$this->owner->getField('SuperGlueFirstPageLimit') ?: 9;
+    }
+
+    /**
+     * Returns the per-page item limit, falling back to the default if the DB value
+     * is 0 or null. See getSuperGluePinLimit() for context on why this is needed.
+     */
+    public function getSuperGluePageLimit(): int
+    {
+        return (int)$this->owner->getField('SuperGluePageLimit') ?: 9;
+    }
 
     /**
      * @inheritdoc
@@ -147,7 +176,13 @@ class PageExtension extends DataExtension
      */
     public function updateCMSFields(FieldList $fields)
     {
-        parent::updateCMSFields($fields);
+        $fields->removeByName([
+            'SuperGlueConnector',
+            'SuperGluePinLimit',
+            'SuperGlueFirstPageLimit',
+            'SuperGluePageLimit',
+            'SuperGlueSubPages',
+        ]);
 
         Requirements::customScript("
             var index = 0;
