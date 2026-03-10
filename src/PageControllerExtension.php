@@ -3,8 +3,8 @@
 namespace SilverStripe\SuperGlue;
 
 use SilverStripe\Core\Extension;
+use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\PaginatedList;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPResponse;
 
@@ -43,14 +43,14 @@ class PageControllerExtension extends Extension
         }
 
         $data = [
-            "total" => (int)$pages->TotalItems(),
+            "total" => (int)$pages->getTotalItems(),
             "limit" => (int)$pages->getPageLength(),
             "start" => (int)$pages->getPageStart(),
             "next"  => $pages->NextLink(),
             "items" => $items,
         ];
 
-        if ((int)$pages->getPageStart() >= (int)$pages->TotalItems() - (int)$pages->getPageLength()) {
+        if ((int)$pages->getPageStart() >= (int)$pages->getTotalItems() - (int)$pages->getPageLength()) {
             unset($data["next"]);
         }
 

@@ -3,20 +3,12 @@
 namespace SilverStripe\SuperGlue;
 
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ManyManyList;
-use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Model\List\ManyManyList;
 
-class SubPageExtension extends DataExtension
+class SubPageExtension extends Extension
 {
-    /**
-     * @var array
-     */
-    private static $belongs_many_many = [
-        "SuperGluePages" => SiteTree::class,
-    ];
-
     /**
      * @inheritdoc
      */
@@ -54,7 +46,7 @@ class SubPageExtension extends DataExtension
     {
         $classes = [];
 
-        foreach (ClassInfo::subClassesFor("Object") as $className) {
+        foreach (ClassInfo::subClassesFor(DataObject::class) as $className) {
             if (DataObject::has_extension($className, $extension)) {
                 $classes[] = $className;
             }
