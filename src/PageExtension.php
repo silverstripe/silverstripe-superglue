@@ -21,6 +21,10 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 class PageExtension extends Extension
 {
+    const DEFAULT_PIN_LIMIT = 5;
+    const DEFAULT_FIRST_PAGE_LIMIT = 9;
+    const DEFAULT_PAGE_LIMIT = 9;
+
     /**
      * @var array
      */
@@ -35,9 +39,9 @@ class PageExtension extends Extension
      * @var array
      */
     private static $defaults = [
-        "SuperGluePinLimit"       => 5,
-        "SuperGlueFirstPageLimit" => 9,
-        "SuperGluePageLimit"      => 9,
+        "SuperGluePinLimit"       => self::DEFAULT_PIN_LIMIT,
+        "SuperGlueFirstPageLimit" => self::DEFAULT_FIRST_PAGE_LIMIT,
+        "SuperGluePageLimit"      => self::DEFAULT_PAGE_LIMIT,
     ];
 
     /**
@@ -65,7 +69,7 @@ class PageExtension extends Extension
      */
     public function getSuperGluePinLimit(): int
     {
-        return (int)$this->owner->getField('SuperGluePinLimit') ?: 5;
+        return (int)$this->owner->getField('SuperGluePinLimit') ?: self::DEFAULT_PIN_LIMIT;
     }
 
     /**
@@ -74,7 +78,7 @@ class PageExtension extends Extension
      */
     public function getSuperGlueFirstPageLimit(): int
     {
-        return (int)$this->owner->getField('SuperGlueFirstPageLimit') ?: 9;
+        return (int)$this->owner->getField('SuperGlueFirstPageLimit') ?: self::DEFAULT_FIRST_PAGE_LIMIT;
     }
 
     /**
@@ -83,7 +87,7 @@ class PageExtension extends Extension
      */
     public function getSuperGluePageLimit(): int
     {
-        return (int)$this->owner->getField('SuperGluePageLimit') ?: 9;
+        return (int)$this->owner->getField('SuperGluePageLimit') ?: self::DEFAULT_PAGE_LIMIT;
     }
 
     /**
